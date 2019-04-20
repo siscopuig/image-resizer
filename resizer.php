@@ -54,7 +54,7 @@ class ResizeImage
 class Options
 {
 
-    public $options;
+    public $args;
     public $inpath;
     public $output;
     public $width;
@@ -62,7 +62,9 @@ class Options
     public $is_file;
     public $files = [];
     public $batch = [];
+    public $errors = [];
     public $ext_list = ['jpg', 'png', 'gif'];
+
 
     function __construct()
     {
@@ -71,43 +73,39 @@ class Options
         $shortopts .= "s:";     # Required value
         $shortopts .= "o:";     # Optional value
         $longopts = ['path:', 'size:', 'output:'];
-        $this->options = getopt($shortopts, $longopts);
-        print_r($this->options);
+        $this->args = getopt($shortopts, $longopts);
     }
 
     function processOptions()
     {
-        foreach ($this->options as $key => $value) {
+        if (count($this->args) !== 3) {
+            throw new Exception("Arguments passed are wrong or incomplete!");
+        }
 
-            echo "Key: $key, Value: $value \n";
-
-            if ($key == 'p' OR $key == 'path' AND !empty($value)) {
-                if (is_readable($value))
-                    $this->inpath = realpath($value);
-                else throw new Exception("Path: $value not readable, check permissions!");
-                if (is_file($value))
+        foreach ($this->args as $key => $arg) {
+            if ($key === 'p' || $key === 'path') {
+                if (is_readable($arg)) {
+                    $this->inpath = realpath($arg);
+                } else {throw new Exception("Path: $arg not readable, check permissions!");}
+                if (is_file($arg))
                     $this->is_file = true;
-                if (is_dir($value))
+                if (is_dir($arg))
                     $this->getFilesFromDir();
-            } else {throw new Exception("Path argument -p or --path is missing or empty");}
-
-            if (($key == 's' OR $key == 'size' AND !empty($value))) {
-                if (strpos($value, 'x') !== false) {
-                    list($width, $height) = explode('x', $value);
+            } elseif ($key === 's' || $key === 'size') {
+                if (strpos($arg, 'x') !== false) {
+                    list($width, $height) = explode('x', $arg);
                     if (is_numeric($width) AND is_numeric($height)) {
                         $this->width = intval($width);
                         $this->height = intval($height);
                     } else {throw new Exception("Size: $width or $height value is not numeric");}
-                } else {throw new Exception("Size $value might not have character: x");}
-            } else {throw new Exception("Size argument -s or --size is missing or empty");}
-
-            if ($key == 'o' OR $key == 'output' AND !empty($value)) {
-                if (is_writable($value)) {
-                    if (is_dir($value)) {
-                        $this->output = realpath($value);
+                } else {throw new Exception("Size $arg might not have character: x");}
+            } elseif ($key === 'o' || $key === 'output') {
+                if (is_writable($arg)) {
+                    if (is_dir($arg)) {
+                        $this->output = realpath($arg);
                     } else {throw new Exception('Output path argument is empty or missing');}
-                } else {throw new Exception("Output path: $value not writable, check directory permissions!");}
-            } else {throw new Exception("Output path: $value is not a directory!");}
+                } else {throw new Exception("Output path: $arg not writable, check directory permissions!");}
+            }
         }
     }
 
@@ -156,8 +154,7 @@ class Options
     {
         if ($h = opendir($this->inpath)) {
             while (($file = readdir($h)) !== false) {
-                if ($file !== '..' AND $file !== '.' AND $file
-                    !== '.DS_Store') {
+                if ($file !== '..' AND $file !== '.' AND $file !== '.DS_Store') {
                     $this->files[] .= $file;
                 }
             }
@@ -174,6 +171,11 @@ class Options
             'height' => $this->height,
             'ext'    => $this->ext
         ];
+    }
+
+    function addErrorMsg($error)
+    {
+        $this->errors[] .= $error;
     }
 }
 
