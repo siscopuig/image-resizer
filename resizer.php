@@ -12,11 +12,11 @@ class ResizeImage
 
     function __construct(array $img)
     {
-        $this->input = $img['input'];
+        $this->input  = $img['input'];
         $this->output = $img['output'];
-        $this->width = $img['width'];
+        $this->width  = $img['width'];
         $this->height = $img['height'];
-        $this->ext = $img['ext'];
+        $this->ext    = $img['ext'];
     }
 
     function resizer()
@@ -24,25 +24,24 @@ class ResizeImage
 
         list($w, $h) = getimagesize($this->input);
         $scale_ratio = $w / $h;
-        if ($w < $this->width) {
-            $this->width = $w;
-        }
-        if ($h < $this->height) {
-            $this->height = $h;
-        }
-        if (($this->width / $this->height) > $scale_ratio) {
-            $this->width = $this->height * $scale_ratio;
-        } else {
-            $this->height = $this->width / $scale_ratio;
-        }
 
-        if ($this->ext == 'jpg') {
+        if ($w < $this->width)
+            $this->width = $w;
+
+        if ($h < $this->height)
+            $this->height = $h;
+
+        if (($this->width / $this->height) > $scale_ratio)
+            $this->width = $this->height * $scale_ratio;
+        else
+            $this->height = $this->width / $scale_ratio;
+
+        if ($this->ext == 'jpg')
             $this->img = imagecreatefromjpeg($this->input);
-        } elseif ($this->ext == 'png') {
+        elseif ($this->ext == 'png')
             $this->img = imagecreatefrompng($this->input);
-        } elseif ($this->ext == 'gif') {
+        elseif ($this->ext == 'gif')
             $this->img = imagecreatefromgif($this->input);
-        }
 
         $this->base_img = imagecreatetruecolor($this->width, $this->height);
         imagecopyresampled($this->base_img, $this->img, 0, 0, 0, 0,
@@ -78,9 +77,8 @@ class Options
 
     function processOptions()
     {
-        if (count($this->args) !== 3) {
+        if (count($this->args) !== 3)
             throw new Exception("Arguments passed are wrong or incomplete!");
-        }
 
         foreach ($this->args as $key => $arg) {
             if ($key === 'p' || $key === 'path') {
@@ -113,7 +111,7 @@ class Options
     {
         # On here can be this 2 cases:
         #   - '/home/sisco/Sites/image-resizer/images/img_1.jpg' -> file
-        #   - '/home/sisco/Sites/image-resizer/images'
+        #   - '/home/sisco/Sites/image-resizer/images'           -> dir
 
         if ($this->is_file AND $this->processExtension($this->inpath)) {
             $path = $this->inpath;
@@ -171,11 +169,6 @@ class Options
             'height' => $this->height,
             'ext'    => $this->ext
         ];
-    }
-
-    function addErrorMsg($error)
-    {
-        $this->errors[] .= $error;
     }
 }
 
